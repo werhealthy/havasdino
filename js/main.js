@@ -1,59 +1,50 @@
-import { loadSpriteImages } from "./assets.js";
-import { Game } from "./game.js";
+window.App = window.App || {};
 
-const canvas = document.getElementById("game");
+(function () {
+  const canvas = document.getElementById("game");
+  if (!canvas) return;
 
-async function bootstrap() {
-  const images = await loadSpriteImages();
-  const game = new Game(canvas, images);
+  function start(images) {
+    const game = new App.Game(canvas, images);
 
-  // Sound hook for future effects.
-  const audio = {
-    jump() {},
-    hit() {}
-  };
-  void audio;
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "ArrowUp") {
+        event.preventDefault();
+        game.triggerJump();
+      }
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        game.setDuck(true);
+      }
+      if (event.code === "Enter" && game.state === "gameover") {
+        event.preventDefault();
+        game.restart();
+      }
+    });
 
-  document.addEventListener("keydown", (event) => {
-    if (event.code === "Space" || event.code === "ArrowUp") {
-      event.preventDefault();
-      game.triggerJump();
+    document.addEventListener("keyup", (event) => {
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        game.setDuck(false);
+      }
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      const rect = canvas.getBoundingClientRect();
+      game.click(event.clientX - rect.left, event.clientY - rect.top);
+    });
+
+    let last = performance.now();
+    function frame(now) {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+      game.update(dt);
+      game.render();
+      requestAnimationFrame(frame);
     }
-    if (event.code === "ArrowDown") {
-      event.preventDefault();
-      game.setDuck(true);
-    }
-    if (event.code === "Enter" && game.state === "gameover") {
-      event.preventDefault();
-      game.restart();
-    }
-  });
 
-  document.addEventListener("keyup", (event) => {
-    if (event.code === "ArrowDown") {
-      event.preventDefault();
-      game.setDuck(false);
-    }
-  });
-
-  canvas.addEventListener("pointerdown", (event) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    game.click(x, y);
-  });
-
-  let last = performance.now();
-
-  function frame(now) {
-    const dt = Math.min(0.033, (now - last) / 1000);
-    last = now;
-    game.update(dt);
-    game.render();
     requestAnimationFrame(frame);
   }
 
-  requestAnimationFrame(frame);
-}
-
-bootstrap();
+  App.loadSpriteImages(start);
+})();

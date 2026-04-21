@@ -1,37 +1,54 @@
-import { SPRITES } from "./config.js";
+window.App = window.App || {};
 
-const placeholder = () => {
-  const c = document.createElement("canvas");
-  c.width = 24;
-  c.height = 24;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#333";
-  ctx.fillRect(5, 4, 14, 16);
-  ctx.fillStyle = "#f6d365";
-  ctx.fillRect(9, 0, 6, 6);
-  return c;
-};
+(function () {
+  const { SPRITES } = App.CONFIG;
 
-export async function loadSpriteImages() {
-  const loaded = {};
+  function placeholder(name) {
+    const c = document.createElement("canvas");
+    c.width = 96;
+    c.height = 128;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#17345f";
+    ctx.fillRect(20, 22, 54, 90);
+    ctx.fillStyle = "#efc9a6";
+    ctx.fillRect(30, 0, 34, 32);
+    ctx.fillStyle = "#fff";
+    ctx.font = "10px monospace";
+    ctx.fillText(name[0].toUpperCase(), 44, 62);
+    return c;
+  }
 
-  await Promise.all(
-    Object.entries(SPRITES).map(([key, value]) =>
-      new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          loaded[key] = img;
-          resolve();
-        };
-        img.onerror = () => {
-          // Safe fallback so the game is playable if files are missing.
-          loaded[key] = placeholder();
-          resolve();
-        };
-        img.src = value.image;
-      })
-    )
-  );
+  App.loadSpriteImages = function loadSpriteImages(onComplete) {
+    const loaded = {};
+    const entries = Object.entries(SPRITES);
+    let done = 0;
 
-  return loaded;
-}
+    const finish = () => {
+      done += 1;
+      if (done === entries.length) onComplete(loaded);
+    };
+
+    entries.forEach(([key, value]) => {
+      const img = new Image();
+      let settled = false;
+
+      const useFallback = () => {
+        if (settled) return;
+        settled = true;
+        loaded[key] = placeholder(key);
+        finish();
+      };
+
+      img.onload = () => {
+        if (settled) return;
+        settled = true;
+        loaded[key] = img;
+        finish();
+      };
+      img.onerror = useFallback;
+      img.src = value.image;
+
+      setTimeout(useFallback, 2000);
+    });
+  };
+})();

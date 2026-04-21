@@ -31,7 +31,7 @@ Then open `http://localhost:8080`.
 ├── style.css
 ├── README.md
 └── js/
-    ├── main.js        # bootstrap, input wiring, game loop
+    ├── main.js        # bootstrap, input wiring, game loop (non-module scripts)
     ├── game.js        # state machine, update/render orchestration
     ├── player.js      # player movement, animation state, hitbox
     ├── obstacle.js    # obstacle generation, rendering, hitboxes
